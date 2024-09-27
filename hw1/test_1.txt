@@ -1,0 +1,79 @@
+TEST-1
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END
+
+TEST-2
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END
+
+TEST-3
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END
+
+TEST-4
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END
+
+TEST-5
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END
+
+TEST-6
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END
+
+TEST-7
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END
+
+TEST-8
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END
+
+TEST-9
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END
+
+TEST-10
+TEST-BEGIN
+TEXT:
+
+COMMAND:
+preprocess data.txt
+TEST-END

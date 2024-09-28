@@ -75,6 +75,14 @@ the result buffer is null-terminated (result[result_index] = '\0'), and its
 contents are copied back to the original line using the custom my_strncpy() function. 
 This prepares the line for another pass if additional substitutions are needed.
 
+Once all substitutions are completed, an additional whitespace cleanup 
+step is performed. This step scans through the line and collapses 
+multiple consecutive spaces and tabs into a single space, but only after 
+encountering the first non-whitespace character in the line. Leading spaces 
+and tabs are preserved to maintain the original formatting. This cleanup 
+ensures that the output does not contain unnecessary gaps, making it 
+consistent with gcc's output.
+
 The do-while loop continues until no more substitutions are made during a pass, 
 ensuring that even nested or dependent variables are fully replaced 
 (e.g., if A is defined as B and B is defined as 100). 

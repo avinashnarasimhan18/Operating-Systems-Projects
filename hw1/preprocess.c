@@ -74,58 +74,78 @@ int is_define_line(char *line) {
     return (my_strncmp(line, "#define", 7) == 0);
 }
 
-// Function to substitute variables in a line with their values 
+// Function to substitute variables in a line with their values (with recursive substitution and whitespace cleanup)
 void substitute_variables(char *line, struct definition *defs, int num_defs) {
-    // If the line starts with #define, ignore it completely
     if (is_define_line(line)) {
-        return;  // Skip the line without printing or processing
+        return;  // Skip the line if it's a #define directive
     }
 
     char result[MAX_LINE_LEN];
     int result_index, i, j, k, matched;
-    int original_non_empty = 0; // Flag to track if the line was originally non-empty
-
-    // We loop until no further substitutions are made in a pass
+    int original_non_empty = 0;  // Flag to track if the line was originally non-empty
     int substitutions_made;
 
+    // We loop until no further substitutions are made in a pass
     do {
-        substitutions_made = 0;  // Track if any substitution happens in this pass
+        substitutions_made = 0;
         result_index = 0;
         i = 0;
 
         while (line[i] != '\0') {
             matched = 0;
+
             for (j = 0; j < num_defs; j++) {
                 int len = strlen(defs[j].var);
-                // Use starts_with_var to ensure we match only valid C identifier variable names
                 if (starts_with_var(&line[i], defs[j].var, line)) {
                     for (k = 0; defs[j].val[k] != '\0'; k++) {
                         result[result_index++] = defs[j].val[k];
                     }
-                    i += len; 
+                    i += len;
                     matched = 1;
-                    substitutions_made = 1;  // Mark that a substitution was made
-                    original_non_empty = 1;  // This means the line had content before substitution
+                    substitutions_made = 1;
+                    original_non_empty = 1;
                     break;
                 }
             }
+
             if (!matched) {
                 if (line[i] != ' ' && line[i] != '\t' && line[i] != '\n') {
-                    original_non_empty = 1;  // Mark if the line was non-empty before substitution
+                    original_non_empty = 1;
                 }
                 result[result_index++] = line[i++];
             }
         }
 
         result[result_index] = '\0';  // Null-terminate the result string
-
-        // Copy result back into line to allow further substitutions
         my_strncpy(line, result, MAX_LINE_LEN);
 
     } while (substitutions_made);  // Keep substituting until no more changes are made
 
+    // After substitutions, collapse consecutive spaces/tabs after text into a single space
+    int read_index = 0;
+    int write_index = 0;
+    int found_non_space = 0;  // To check when we encounter the first non-whitespace character
+    while (line[read_index] != '\0') {
+        if (line[read_index] == ' ' || line[read_index] == '\t') {
+            if (found_non_space) {
+                // If we've seen text before, collapse consecutive spaces/tabs into a single space
+                if (write_index > 0 && result[write_index - 1] != ' ') {
+                    result[write_index++] = ' ';
+                }
+            } else {
+                // Preserve leading spaces and tabs (before any text)
+                result[write_index++] = line[read_index];
+            }
+        } else {
+            found_non_space = 1;  // Mark that we've encountered a non-whitespace character
+            result[write_index++] = line[read_index];
+        }
+        read_index++;
+    }
+    result[write_index] = '\0';  // Null-terminate the cleaned line
+
     // Skip printing if the line is completely empty after substitution
-    if (original_non_empty || result_index > 0) {
+    if (original_non_empty || write_index > 0) {
         printf(1, "%s\n", result);  // Print each substituted line if it originally had content or is not empty
     }
 }

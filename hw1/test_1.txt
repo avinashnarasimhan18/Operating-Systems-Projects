@@ -1,79 +1,114 @@
 TEST-1
 TEST-BEGIN
 TEXT:
-
+Hello, Avinash!
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DAvinash=World
 TEST-END
 
 TEST-2
 TEST-BEGIN
 TEXT:
-
+Hello, Avinash!
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DMark=Scott -DAvinash=World
 TEST-END
 
 TEST-3
 TEST-BEGIN
 TEXT:
-
+Hello, Avinash!
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DHello=Hi -DAvinash=World -Dam=is
 TEST-END
 
 TEST-4
 TEST-BEGIN
 TEXT:
-
+Hello, Avinash!
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DAvinash=World -DWorld=Human
 TEST-END
 
 TEST-5
 TEST-BEGIN
 TEXT:
+Hello, Avinash!
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
+
+
 
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DHello=Hi
 TEST-END
 
 TEST-6
 TEST-BEGIN
 TEXT:
+Hello, Avinash!
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
 
+
+Hello
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DHello=
 TEST-END
 
 TEST-7
 TEST-BEGIN
 TEXT:
-
+Hello, Avinash!
+#define x 20
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DAvinash=World
 TEST-END
 
 TEST-8
 TEST-BEGIN
 TEXT:
-
+Hello, Avinash!
+Avinash #define x 20
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DAvinash=Hello
 TEST-END
 
 TEST-9
 TEST-BEGIN
 TEXT:
+Hello, Avinash!
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
 
+
+Hello
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DHello=
 TEST-END
 
 TEST-10
 TEST-BEGIN
 TEXT:
+Hello, Avinash!
+ #define x 42
+I am your AI assistant and I am here to help. 
+Please ask me all your questions!
 
+
+Hello
 COMMAND:
-preprocess data.txt
+preprocess data.txt -DHello=Hi
 TEST-END

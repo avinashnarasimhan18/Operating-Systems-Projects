@@ -13,7 +13,7 @@ struct definition {
     char val[MAX_VAL_LEN];
 };
 
-// Custom version of strncmp for xv6 (since xv6 might not include it)
+// Custom version of strncmp for xv6 
 int my_strncmp(char *str1, char *str2, int n) {
     int i;
     for (i = 0; i < n; i++) {
@@ -27,7 +27,7 @@ int my_strncmp(char *str1, char *str2, int n) {
     return 0;
 }
 
-// Function to check if a character is a valid identifier character (for C variables)
+// Function to check if a character is a valid identifier
 int is_valid_identifier_char(char c, int is_start) {
     if (is_start) {
         return (c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
@@ -53,7 +53,7 @@ int starts_with_var(char *str, char *var, char *start_of_str) {
     return 0;
 }
 
-// Custom strncpy function
+// Custom version of strncpy for xv6 
 void my_strncpy(char *dest, char *src, int n) {
     int i;
     for (i = 0; i < n && src[i] != '\0'; i++) {
@@ -74,7 +74,7 @@ int is_define_line(char *line) {
     return (my_strncmp(line, "#define", 7) == 0);
 }
 
-// Function to substitute variables in a line with their values (with recursive substitution)
+// Function to substitute variables in a line with their values 
 void substitute_variables(char *line, struct definition *defs, int num_defs) {
     // If the line starts with #define, ignore it completely
     if (is_define_line(line)) {
@@ -152,8 +152,11 @@ int main(int argc, char *argv[]) {
         if (my_strncmp(argv[i], "-D", 2) == 0) {
             char *def = argv[i] + 2; 
             char *equal_sign = strchr(def, '=');
+            int var_len;
+
             if (equal_sign != 0) {
-                int var_len = equal_sign - def;
+                // If '=' is found, parse normally
+                var_len = equal_sign - def;
                 if (var_len < MAX_VAR_LEN && strlen(equal_sign + 1) < MAX_VAL_LEN) {
                     my_strncpy(defs[num_defs].var, def, var_len);
                     defs[num_defs].var[var_len] = '\0';
@@ -164,8 +167,17 @@ int main(int argc, char *argv[]) {
                     exit();
                 }
             } else {
-                printf(1, "Error: Invalid definition format. Use -Dvar=val\n");
-                exit();
+                // If '=' is not found, set the value to "1"
+                var_len = strlen(def);
+                if (var_len < MAX_VAR_LEN) {
+                    my_strncpy(defs[num_defs].var, def, var_len);
+                    defs[num_defs].var[var_len] = '\0';
+                    my_strncpy(defs[num_defs].val, "1", MAX_VAL_LEN);
+                    num_defs++;
+                } else {
+                    printf(1, "Error: Variable too long\n");
+                    exit();
+                }
             }
         }
     }

@@ -1,0 +1,112 @@
+The code is a custom preprocessor for xv6 which replicates the functionalities of the 
+gcc -E -P command. It reads a text file, substitutes the defined variables, processes 
+#define directives, and prints the final output.
+
+1. Defining Header Files and Constants
+
+The code first includes headers from the xv6 environment for I/O, file operations
+and string manipulation. There are also constants defined for managing the variable 
+and line sizes. We have defined the max number of variables that can be defined,
+max length of a variable name/value, max length of a line in the input file. These
+constants have been defined based on a trial and error method of xv6's processing 
+power.
+
+2. Helper functions 
+
+We have defined certain helper functions which will be used in processing the text.
+
+    a. my_strncmp - This function compares strings by matching each character and
+    returns 0 if the strings match upto n characters. This function is required to
+    identify directibes and to check if a string matches a variable name.
+
+    b. is_valid_identifier_char - This function ensures that variable names follow
+    the rules of C identifiers. It is used in another function to check if a substring 
+    is a valid variable name and to identify boundaries i.e. to ensure partial 
+    matches do not get substituted.
+
+    c. starts_with_var - This function identifies whether a string begins with a 
+    defined variable name and ensures it is not part of a larger word. It ensures that 
+    substitutions happen only at valid boundaries, preventing incorrect replacements.
+    It checks both the start and end of the variable for valid identifier boundaries.
+
+    d. my_strncpy - This function copies upto n characters from the source to 
+    destination, ensuring that the destination is null-terminated. It is used when 
+    storing variable names and values from command-line arguments. It is also used
+    during line substitution to manipulate strings safely.
+
+    e. is_define_line - This function identifies lines that contain #define directives
+    by checking its length.
+
+3. Substitute Variables function
+
+This function is the core of the preprocessor. It reads a single line, substitutes 
+defined variables with their respective values, and outputs the modified line. The
+function iterates through the line multiple times if required, ensuring all the
+substitutions are applied even when varuables are nested inside values. The function
+takes in a line, the defined variable value pairs and number of definitions.
+
+The code first checks for #define lines. If the line starts with the define directive, 
+the function exits without printing that line similar to how gcc works.
+
+The code first sets up a buffer (result) to hold the modified line and 
+several index variables (result_index, i, j, k) to track positions during string 
+traversal and substitution. It also uses a substitutions_made flag to indicate whether 
+any substitution were made during a single pass over the line. This ensures that the 
+function continues looping through the line until no further substitutions are 
+necessary. The outer do-while loop allows the function to handle nested substitutions 
+where one variable's value might contain another defined variable.
+
+Within the while loop, the function iterates over each character in the line, 
+matching variables defined in the defs array. For each defined variable, it uses 
+the helper function starts_with_var() to check if the current substring starting 
+at position line[i] matches a defined variable name and is a valid C identifier. 
+If a match is found, it copies the corresponding value (defs[j].val) 
+character-by-character into the result buffer, advances the position in the line 
+by the length of the matched variable, and sets flags 
+(matched, substitutions_made, and original_non_empty) to indicate that a substitution 
+occurred. The original_non_empty flag tracks whether the line contained meaningful 
+content (i.e., non-whitespace characters) before substitutions were made, 
+which is used later to determine whether to print the modified line.
+
+If no variable match is found at the current position, the character is copied 
+as-is to the result buffer, preserving non-variable content like punctuation, 
+spaces, and unrelated text. After the inner loop completes one pass over the line, 
+the result buffer is null-terminated (result[result_index] = '\0'), and its 
+contents are copied back to the original line using the custom my_strncpy() function. 
+This prepares the line for another pass if additional substitutions are needed.
+
+The do-while loop continues until no more substitutions are made during a pass, 
+ensuring that even nested or dependent variables are fully replaced 
+(e.g., if A is defined as B and B is defined as 100). 
+Finally, if the line was not empty before substitutions or if it has some content 
+remaining in result after all substitutions, the function prints the modified line 
+to the console using printf(). This ensures that only meaningful lines are printed, 
+avoiding printing lines that are empty due to complete removal of content 
+during substitutions. 
+
+4. Main function
+
+The main function takes command-line arguments to read an input file and 
+perform variable substitutions based on user-defined definitions. 
+It starts by validating that at least one command-line argument is provided, 
+representing the input file. If not, it prints a usage message and exits. 
+The input file is then opened using open() in read-only mode, and if the file 
+cannot be accessed, an error message is printed, and the program exits. 
+The program then initializes an array of definition structures to store up to 
+MAX_VARS variable definitions. It parses additional command-line arguments in the 
+format -Dvar=val or -Dvar to extract variable names and values. 
+If =val is missing, the value is defaulted to "1". 
+
+The extracted definitions are stored in the defs array, ensuring that variable names 
+and values do not exceed predefined length limits. If no valid definitions are 
+provided, the program exits with an error.
+
+After parsing, the program reads the input file character-by-character using a loop, 
+accumulating each line into a buffer until a newline character (\n) or the maximum 
+line length is reached. Once a complete line is read, it is null-terminated and 
+passed to the substitute_variables function, which performs variable substitutions 
+based on the definitions provided. The program handles edge cases where a line may 
+not end with a newline character by processing any remaining content in the buffer
+after the file is fully read. Finally, the file is closed using close(), 
+and the program exits. 
+

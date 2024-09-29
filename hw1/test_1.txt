@@ -89,14 +89,13 @@ TEST-END
 TEST-9
 TEST-BEGIN
 TEXT:
-Hello, Avinash!
-I am your AI assistant and I am here to help. 
-Please ask me all your questions!
-
-
-Hello
+Hello, World! HELLO world.
+I am an AI. Am I? Yes, I am!
+This is a test of edge-cases.
+Repeated: test test test
+Empty() and Special@#$% characters.
 COMMAND:
-preprocess data.txt -DHello=
+preprocess data.txt -Dtest=exam
 TEST-END
 
 TEST-10

@@ -14,6 +14,8 @@ power.
 2. Helper functions 
 
 We have defined certain helper functions which will be used in processing the text.
+Since xv6 has limited string manipulation techniques as the standard C libraries
+are not available, so we have defined custom string manipulation functions.
 
     a. my_strncmp - This function compares strings by matching each character and
     returns 0 if the strings match upto n characters. This function is required to

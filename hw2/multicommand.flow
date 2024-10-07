@@ -1,0 +1,25 @@
+node=create_file
+command=echo "Line 1" > test.txt && echo "Line 2" >> test.txt
+
+node=cat_file
+command=cat test.txt
+
+node=sort_reverse
+command=sort -r
+
+node=count_uniq
+command=uniq -c
+
+pipe=cat_to_sort
+from=cat_file
+to=sort_reverse
+
+pipe=sort_to_uniq
+from=sort_reverse
+to=count_uniq
+
+concatenate=process
+parts=3
+part_0=create_file
+part_1=cat_to_sort
+part_2=sort_to_uniq

@@ -1,0 +1,51 @@
+TEST-1
+TEST-BEGIN
+COMMAND:
+ls | wc
+FLOW COMMAND:
+./flow filecount.flow doit
+EXPECTED OUTPUT:
+<number of files, words, and characters in the current directory>
+TEST-END
+
+TEST-2
+TEST-BEGIN
+COMMAND:
+echo "Hello, World!" | tr '[:lower:]' '[:upper:]'
+FLOW COMMAND:
+./flow uppercase.flow convert
+EXPECTED OUTPUT:
+HELLO, WORLD!
+TEST-END
+
+TEST-3
+TEST-BEGIN
+COMMAND:
+cat foo.txt ; cat foo.txt | sed 's/o/u/g'
+FLOW COMMAND:
+./flow complicated.flow foo_then_fuu
+EXPECTED OUTPUT:
+f o o
+f u u
+TEST-END
+
+TEST-4
+TEST-BEGIN
+COMMAND:
+(cat foo.txt ; cat foo.txt | sed 's/o/u/g') | wc
+FLOW COMMAND:
+./flow complicated.flow shenanigan
+EXPECTED OUTPUT:
+      2       6      12
+TEST-END
+
+TEST-5
+TEST-BEGIN
+COMMAND:
+echo "Line 1" > test.txt && echo "Line 2" >> test.txt && cat test.txt | sort -r | uniq -c
+FLOW COMMAND:
+./flow multicommand.flow process
+EXPECTED OUTPUT:
+      1 Line 2
+      1 Line 1
+TEST-END

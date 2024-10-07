@@ -25,8 +25,7 @@ cat foo.txt ; cat foo.txt | sed 's/o/u/g'
 FLOW COMMAND:
 ./flow complicated.flow foo_then_fuu
 EXPECTED OUTPUT:
-f o o
-f u u
+f o of u u
 TEST-END
 
 TEST-4
@@ -36,7 +35,7 @@ COMMAND:
 FLOW COMMAND:
 ./flow complicated.flow shenanigan
 EXPECTED OUTPUT:
-      2       6      12
+      0       5      10
 TEST-END
 
 TEST-5

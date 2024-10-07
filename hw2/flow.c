@@ -31,7 +31,6 @@ Concatenate concatenates[MAX_NODES];
 int node_count = 0, pipe_count = 0, concatenate_count = 0;
 
 void execute_command(const char* command) {
-   
     system(command);
 }
 
@@ -54,12 +53,12 @@ void build_concatenate_command(const char* concat_name, char* result) {
                 if (cmd) {
                     strcat(result, cmd);
                 } else {
+                    char pipe_cmd[1000] = "";
                     for (int k = 0; k < pipe_count; k++) {
                         if (strcmp(pipes[k].name, concatenates[i].parts[j]) == 0) {
                             char* from_cmd = get_node_command(pipes[k].from);
                             char* to_cmd = get_node_command(pipes[k].to);
                             if (from_cmd && to_cmd) {
-                                char pipe_cmd[1000];
                                 sprintf(pipe_cmd, "%s | %s", from_cmd, to_cmd);
                                 strcat(result, pipe_cmd);
                             }
@@ -67,7 +66,6 @@ void build_concatenate_command(const char* concat_name, char* result) {
                         }
                     }
                 }
-                strcat(result, "; echo"); // Add a newline after each part
             }
             strcat(result, "; } ");
             return;
@@ -76,7 +74,6 @@ void build_concatenate_command(const char* concat_name, char* result) {
 }
 
 void execute_node(const char* node_name) {
-   
     char* cmd = get_node_command(node_name);
     if (cmd) {
         execute_command(cmd);
@@ -106,7 +103,7 @@ void execute_node(const char* node_name) {
             if (to_cmd) {
                 strcat(pipe_cmd, to_cmd);
             } else {
-                
+                fprintf(stderr, "Error: 'to' node not found for pipe %s\n", node_name);
                 return;
             }
             execute_command(pipe_cmd);
@@ -114,7 +111,7 @@ void execute_node(const char* node_name) {
         }
     }
     
-    
+    fprintf(stderr, "Error: Node '%s' not found\n", node_name);
 }
 
 void parse_flow_file(const char* filename) {
@@ -135,7 +132,6 @@ void parse_flow_file(const char* filename) {
             fgets(line, sizeof(line), file);
             sscanf(line, "command=%[^\n]", node.command);
             nodes[node_count++] = node;
-          
         } else if (strcmp(token, "pipe") == 0) {
             PipeNode pipe;
             strcpy(pipe.name, strtok(NULL, "\n"));
@@ -144,17 +140,14 @@ void parse_flow_file(const char* filename) {
             fgets(line, sizeof(line), file);
             sscanf(line, "to=%s", pipe.to);
             pipes[pipe_count++] = pipe;
-          
         } else if (strcmp(token, "concatenate") == 0) {
             Concatenate concat;
             strcpy(concat.name, strtok(NULL, "\n"));
             fgets(line, sizeof(line), file);
             sscanf(line, "parts=%d", &concat.num_parts);
-          
             for (int i = 0; i < concat.num_parts; i++) {
                 fgets(line, sizeof(line), file);
                 sscanf(line, "part_%*d=%s", concat.parts[i]);
-             
             }
             concatenates[concatenate_count++] = concat;
         }
@@ -165,14 +158,11 @@ void parse_flow_file(const char* filename) {
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
-     
+        fprintf(stderr, "Usage: %s <flow_file> <action>\n", argv[0]);
         return 1;
     }
 
-
     parse_flow_file(argv[1]);
-
-   
     execute_node(argv[2]);
 
     return 0;

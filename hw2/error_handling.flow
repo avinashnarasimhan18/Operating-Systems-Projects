@@ -1,5 +1,5 @@
 node=mkdir_attempt
-command=mkdir a
+command=mkdir test_directory
 
 node=word_count
 command=wc

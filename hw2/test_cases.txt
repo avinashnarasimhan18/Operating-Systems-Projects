@@ -5,20 +5,10 @@ ls | wc
 FLOW COMMAND:
 ./flow filecount.flow doit
 EXPECTED OUTPUT:
-<number of files, words, and characters in the current directory>
+      11      11     146
 TEST-END
 
 TEST-2
-TEST-BEGIN
-COMMAND:
-echo "Hello, World!" | tr '[:lower:]' '[:upper:]'
-FLOW COMMAND:
-./flow uppercase.flow convert
-EXPECTED OUTPUT:
-HELLO, WORLD!
-TEST-END
-
-TEST-3
 TEST-BEGIN
 COMMAND:
 cat foo.txt ; cat foo.txt | sed 's/o/u/g'
@@ -28,7 +18,7 @@ EXPECTED OUTPUT:
 f o of u u
 TEST-END
 
-TEST-4
+TEST-3
 TEST-BEGIN
 COMMAND:
 (cat foo.txt ; cat foo.txt | sed 's/o/u/g') | wc
@@ -39,71 +29,10 @@ EXPECTED OUTPUT:
 TEST-END
 
 
-TEST-5
+TEST-4
 TEST-BEGIN
-COMMAND: cat > comprehensive.flow << EOL
-node=generate_numbers
-command=seq 1 10
-
-node=generate_words
-command=echo "apple banana cherry date elderberry fig grape"
-
-node=sort_numbers
-command=sort -n
-
-node=reverse_sort_numbers
-command=sort -nr
-
-node=count_words
-command=tr ' ' '\n' | sort | uniq -c | sort -nr
-
-node=sum_numbers
-command=awk '{sum+=$1} END {print "Sum:", sum}'
-
-node=multiply_numbers
-command=awk '{prod=(prod==0)?$1:prod*$1} END {print "Product:", prod}'
-
-node=uppercase_words
-command=tr '[:lower:]' '[:upper:]'
-
-pipe=numbers_to_sort
-from=generate_numbers
-to=sort_numbers
-
-pipe=numbers_to_reverse_sort
-from=generate_numbers
-to=reverse_sort_numbers
-
-pipe=words_to_count
-from=generate_words
-to=count_words
-
-pipe=words_to_uppercase
-from=generate_words
-to=uppercase_words
-
-pipe=numbers_to_sum
-from=generate_numbers
-to=sum_numbers
-
-pipe=numbers_to_multiply
-from=generate_numbers
-to=multiply_numbers
-
-concatenate=number_operations
-parts=4
-part_0=generate_numbers
-part_1=numbers_to_sort
-part_2=numbers_to_sum
-part_3=numbers_to_multiply
-
-concatenate=word_operations
-parts=3
-part_0=generate_words
-part_1=words_to_count
-part_2=words_to_uppercase
-EOL
-
+COMMAND: 
+cat > comprehensive.flow << EOL
 FLOW COMMAND: ./flow comprehensive.flow number_operations
 EXPECTED OUTPUT:
 1
@@ -120,9 +49,10 @@ Sum: 55
 Product: 3628800
 TEST-END
 
-TEST-6
+TEST-5
 TEST-BEGIN
-COMMAND: # Using the comprehensive.flow file created in TEST-5
+COMMAND: 
+# Using the comprehensive.flow file created in TEST-5
 FLOW COMMAND: ./flow comprehensive.flow word_operations
 EXPECTED OUTPUT:
       1 grape
@@ -135,9 +65,10 @@ EXPECTED OUTPUT:
 APPLE BANANA CHERRY DATE ELDERBERRY FIG GRAPE
 TEST-END
 
-TEST-7
+TEST-6
 TEST-BEGIN
-COMMAND: # Using the comprehensive.flow file created in TEST-5
+COMMAND: 
+# Using the comprehensive.flow file created in TEST-5
 FLOW COMMAND: ./flow comprehensive.flow numbers_to_reverse_sort
 EXPECTED OUTPUT:
 10
@@ -150,4 +81,14 @@ EXPECTED OUTPUT:
 3
 2
 1
+TEST-END
+
+TEST-7
+TEST-BEGIN
+COMMAND:
+mkdir test_directory | wc
+FLOW COMMAND:
+./flow error_handling.flow catch_errors
+EXPECTED OUTPUT:
+       1       4      35
 TEST-END

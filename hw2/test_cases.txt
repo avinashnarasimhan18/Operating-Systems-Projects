@@ -31,10 +31,19 @@ TEST-END
 
 TEST-4
 TEST-BEGIN
-COMMAND: 
-cat > comprehensive.flow << EOL
+COMMAND: seq 1 10 ; seq 1 10 | sort -n ; seq 1 10 | awk '{sum+=$1} END {print "Sum:", sum}' ; seq 1 10 | awk '{prod=(prod==0)?$1:prod*$1} END {print "Product:", prod}'
 FLOW COMMAND: ./flow comprehensive.flow number_operations
 EXPECTED OUTPUT:
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
 1
 2
 3
@@ -49,26 +58,26 @@ Sum: 55
 Product: 3628800
 TEST-END
 
+
 TEST-5
 TEST-BEGIN
-COMMAND: 
-# Using the comprehensive.flow file created in TEST-5
+COMMAND: echo "apple banana cherry date elderberry fig grape" ; echo "apple banana cherry date elderberry fig grape" | tr ' ' '\n' | sort | uniq -c | sort -nr ; echo "apple banana cherry date elderberry fig grape" | tr '[:lower:]' '[:upper:]'
 FLOW COMMAND: ./flow comprehensive.flow word_operations
 EXPECTED OUTPUT:
-      1 grape
-      1 fig
-      1 elderberry
-      1 date
-      1 cherry
-      1 banana
-      1 apple
+apple banana cherry date elderberry fig grape
+1 grape
+1 fig
+1 elderberry
+1 date
+1 cherry
+1 banana
+1 apple
 APPLE BANANA CHERRY DATE ELDERBERRY FIG GRAPE
 TEST-END
 
 TEST-6
 TEST-BEGIN
-COMMAND: 
-# Using the comprehensive.flow file created in TEST-5
+COMMAND: seq 1 10 | sort -nr
 FLOW COMMAND: ./flow comprehensive.flow numbers_to_reverse_sort
 EXPECTED OUTPUT:
 10

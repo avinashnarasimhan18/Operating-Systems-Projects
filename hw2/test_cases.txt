@@ -5,7 +5,7 @@ ls | wc
 FLOW COMMAND:
 ./flow filecount.flow doit
 EXPECTED OUTPUT:
-      11      11     146
+      12      12     158
 TEST-END
 
 TEST-2

@@ -36,39 +36,83 @@ typedef struct {
     int num_parts;
     char parts[MAX_PARTS][50];
 } Concatenate;
+
 Core Functions
 
-parse_flow_file(const char filename)**: This function reads the flow file and populates the Node, PipeNode, StderrNode, and Concatenate structures.
- Based on the file's content, it differentiates between these elements and assigns the necessary data.
-Reads each line and categorizes it based on the type (node, pipe, stderr, concatenate).
-Updates the corresponding arrays (nodes, pipes, stderr_nodes, concatenates).
+1. void parse_command(const char* command, char** args)
+Purpose: This function takes a command string and breaks it down into its individual components or arguments.
+ It’s helpful for preparing the command to be executed by exec functions later on.
+How it works:
+It splits the input string command into smaller strings (words) and stores each one in the args array.
+The array args can then be used by functions like execvp to run the command with arguments.
+This function is not fully defined in your current code, but this is how it typically works when parsing a command for execution.
 
-get_node_command(const char node_name): Finds the shell command corresponding to the given node name.
-Loops through the nodes array, comparing node_name with each stored node's name.
-If found, returns the corresponding command.
+2. void execute_command(const char* command)
+Purpose: This function executes a single shell command by creating a child process and running the command inside it.
+How it works:
+It first calls fork() to create a child process. In the child process, it runs the command using execlp(), 
+which executes the command by invoking a new shell (sh -c <command>).
+If the child process fails to execute the command, it prints an error message.
+The parent process waits for the child process to finish using waitpid(), ensuring the main program waits for the command to complete before moving on.
 
-get_stderr_source_command(const char stderr_name): Similar to get_node_command, but looks for a stderr-related node.
+3. void execute_piped_command(const char* command1, const char* command2)
+Purpose: This function handles the execution of two commands connected by a pipe (|), meaning the output of the first command is passed as input to the second.
+How it works:
+It creates a pipe using pipe(), which provides two file descriptors: one for reading and one for writing.
+It then forks two child processes:
+The first child runs command1 and redirects its output to the pipe's write-end (STDOUT_FILENO).
+The second child runs command2 and takes input from the pipe's read-end (STDIN_FILENO).
+The parent process closes both ends of the pipe and waits for both children to finish, ensuring both commands complete before proceeding.
 
-is_concatenate(const char name): Checks whether a given name corresponds to a Concatenate node.
+4. void build_concatenate_command(const char* concat_name, char* result)
+Purpose: This function builds a long, combined command string that represents a sequence of commands (concatenation).
+Each command in the sequence will run one after the other.
+How it works:
+It looks for a concatenation node (a sequence of commands) by its name (concat_name).
+It then loops through all the commands (or nodes) in the concatenate and appends each one to the result string.
+If one of the parts in the sequence is a pipe, it creates the pipe command by combining two nodes using the | operator.
+The final result is a long string that looks like: command1 ; command2 ; command3, and it is ready to be executed in sequence.
 
-execute_command(const char command): Forks a child process to execute a given shell command using execlp.
-Forks a new process using fork().
-The child process replaces itself with the shell process to run the command using execlp.
-The parent process waits for the child to finish.
+5. char* get_node_command(const char* node_name)
+Purpose: This function retrieves the shell command associated with a node (a named command).
+How it works:
+It loops through the list of nodes that have been defined.
+If it finds a node that matches the node_name, it returns the shell command associated with that node.
+If the node is not found, it returns NULL, meaning no such node exists.
 
-execute_piped_command(const char command1, const char command2): This handles piping between two commands.
-Creates a pipe using pipe().
-Forks two child processes: one to execute the first command and send its output to the pipe, and the other to read from the pipe and execute the second command.
-The parent process closes the pipe and waits for both children to finish.
+6. void execute_node(const char* node_name)
+Purpose: This function executes a node, which could be a regular command, a piped command, or a concatenation of commands.
+How it works:
+First, it checks if the node_name is a simple node and executes its command using execute_command().
+If the node_name represents a pipe, it constructs the piped command and executes it using execute_piped_command().
+If the node_name is a concatenation (a sequence of commands), it builds the concatenated command using build_concatenate_command() and then executes 
+the whole sequence.
+If no matching node, pipe, or concatenate is found, it prints an error message.
 
-build_concatenate_command(const char concat_name, char result): Builds a string of concatenated commands. 
-It loops through the parts of the concatenate and appends each part to the result string.
+7. void parse_flow_file(const char* filename)
+Purpose: This function reads the flow file (the configuration file) that defines nodes, pipes, and concatenates. It populates the internal data structures with these definitions.
+How it works:
+It opens the file and reads it line by line.
+Depending on the keyword in each line (node, pipe, stderr, concatenate), it creates the corresponding structure (node, pipe, stderr node, or concatenate) 
+and stores it in the appropriate global array.
+For nodes, it extracts the command and stores it in the nodes array.
+For pipes, it records the source and destination nodes in the pipes array.
+For concatenates, it records the sequence of nodes to be executed in the concatenates array.
 
-execute_node(const char node_name): Determines whether the node_name is a regular node, pipe, or concatenate and executes the corresponding command.
-It first checks if the node is a simple Node.
-Then, it checks if the node is a PipeNode and builds a pipe command.
-Lastly, it checks if it's a Concatenate and builds the corresponding command.
-Once the command is constructed, it executes it using execute_command().
+8. char* get_stderr_source_command(const char* stderr_name)
+Purpose: This function finds the command associated with a stderr node, which handles commands that redirect standard error.
+How it works:
+It looks for the stderr node by matching its name with stderr_name.
+If found, it returns the command associated with the source (from) of that stderr node.
+If no matching stderr node is found, it returns NULL.
+
+9. int is_concatenate(const char* name)
+Purpose: This function checks whether a given name corresponds to a concatenate node (a sequence of commands).
+How it works:
+It loops through the concatenates array to see if the provided name matches any concatenate node.
+If it finds a match, it returns 1 (true).
+If no match is found, it returns 0 (false).
+
 
 Test Cases
 

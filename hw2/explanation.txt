@@ -1,0 +1,180 @@
+The flow.c code is designed to execute commands, including piping, concatenation, and error handling through flow-based logic, 
+where each node represents a command or set of commands, and pipes define how data flows from one node to another. 
+The flow file is parsed to build a structure, after which specific commands are executed based on user input. 
+The key elements of this program are nodes, pipes, and concatenates.
+
+Key Data Structures
+Node: Represents an individual command.
+
+
+typedef struct {
+    char name[50];
+    char command[100];
+} Node;
+Each node holds a name and the actual shell command to be executed.
+
+PipeNode: Represents the connection between two nodes, indicating how the output of one node is piped into another.
+
+
+typedef struct {
+    char name[50];
+    char from[50];
+    char to[50];
+} PipeNode;
+StderrNode: Similar to PipeNode, but specifically for capturing and redirecting stderr.
+
+
+typedef struct {
+    char name[50];
+    char from[50];
+} StderrNode;
+Concatenate: Represents a sequence of commands to be executed one after another.
+
+
+typedef struct {
+    char name[50];
+    int num_parts;
+    char parts[MAX_PARTS][50];
+} Concatenate;
+
+Core Functions
+
+1. void parse_command(const char* command, char** args)
+Purpose: This function takes a command string and breaks it down into its individual components or arguments.
+ It’s helpful for preparing the command to be executed by exec functions later on.
+How it works:
+It splits the input string command into smaller strings (words) and stores each one in the args array.
+The array args can then be used by functions like execvp to run the command with arguments.
+This function is not fully defined in your current code, but this is how it typically works when parsing a command for execution.
+
+2. void execute_command(const char* command)
+Purpose: This function executes a single shell command by creating a child process and running the command inside it.
+How it works:
+It first calls fork() to create a child process. In the child process, it runs the command using execlp(), 
+which executes the command by invoking a new shell (sh -c <command>).
+If the child process fails to execute the command, it prints an error message.
+The parent process waits for the child process to finish using waitpid(), ensuring the main program waits for the command to complete before moving on.
+
+3. void execute_piped_command(const char* command1, const char* command2)
+Purpose: This function handles the execution of two commands connected by a pipe (|), meaning the output of the first command is passed as input to the second.
+How it works:
+It creates a pipe using pipe(), which provides two file descriptors: one for reading and one for writing.
+It then forks two child processes:
+The first child runs command1 and redirects its output to the pipe's write-end (STDOUT_FILENO).
+The second child runs command2 and takes input from the pipe's read-end (STDIN_FILENO).
+The parent process closes both ends of the pipe and waits for both children to finish, ensuring both commands complete before proceeding.
+
+4. void build_concatenate_command(const char* concat_name, char* result)
+Purpose: This function builds a long, combined command string that represents a sequence of commands (concatenation).
+Each command in the sequence will run one after the other.
+How it works:
+It looks for a concatenation node (a sequence of commands) by its name (concat_name).
+It then loops through all the commands (or nodes) in the concatenate and appends each one to the result string.
+If one of the parts in the sequence is a pipe, it creates the pipe command by combining two nodes using the | operator.
+The final result is a long string that looks like: command1 ; command2 ; command3, and it is ready to be executed in sequence.
+
+5. char* get_node_command(const char* node_name)
+Purpose: This function retrieves the shell command associated with a node (a named command).
+How it works:
+It loops through the list of nodes that have been defined.
+If it finds a node that matches the node_name, it returns the shell command associated with that node.
+If the node is not found, it returns NULL, meaning no such node exists.
+
+6. void execute_node(const char* node_name)
+Purpose: This function executes a node, which could be a regular command, a piped command, or a concatenation of commands.
+How it works:
+First, it checks if the node_name is a simple node and executes its command using execute_command().
+If the node_name represents a pipe, it constructs the piped command and executes it using execute_piped_command().
+If the node_name is a concatenation (a sequence of commands), it builds the concatenated command using build_concatenate_command() and then executes 
+the whole sequence.
+If no matching node, pipe, or concatenate is found, it prints an error message.
+
+7. void parse_flow_file(const char* filename)
+Purpose: This function reads the flow file (the configuration file) that defines nodes, pipes, and concatenates. It populates the internal data structures with these definitions.
+How it works:
+It opens the file and reads it line by line.
+Depending on the keyword in each line (node, pipe, stderr, concatenate), it creates the corresponding structure (node, pipe, stderr node, or concatenate) 
+and stores it in the appropriate global array.
+For nodes, it extracts the command and stores it in the nodes array.
+For pipes, it records the source and destination nodes in the pipes array.
+For concatenates, it records the sequence of nodes to be executed in the concatenates array.
+
+8. char* get_stderr_source_command(const char* stderr_name)
+Purpose: This function finds the command associated with a stderr node, which handles commands that redirect standard error.
+How it works:
+It looks for the stderr node by matching its name with stderr_name.
+If found, it returns the command associated with the source (from) of that stderr node.
+If no matching stderr node is found, it returns NULL.
+
+9. int is_concatenate(const char* name)
+Purpose: This function checks whether a given name corresponds to a concatenate node (a sequence of commands).
+How it works:
+It loops through the concatenates array to see if the provided name matches any concatenate node.
+If it finds a match, it returns 1 (true).
+If no match is found, it returns 0 (false).
+
+
+Test Cases
+
+Test Case 1
+Command: ls | wc
+Flow Command: ./flow filecount.flow doit
+Explanation:
+The flow file filecount.flow defines two nodes: list_files (ls) and word_count (wc).
+The pipe doit connects list_files to word_count, which mirrors the ls | wc command.
+Expected output is the line, word, and character count of the output from ls.
+
+Test Case 2
+Command: cat foo.txt ; cat foo.txt | sed 's/o/u/g'
+Flow Command: ./flow complicated.flow foo_then_fuu
+Explanation:
+The node cat_foo executes cat foo.txt.
+The node sed_o_u executes sed 's/o/u/g' to replace 'o' with 'u'.
+The concatenate foo_then_fuu ensures cat foo.txt and cat foo.txt | sed 's/o/u/g' are run in sequence.
+Expected output includes the content of foo.txt followed by its transformed version.
+
+Test Case 3
+Command: (cat foo.txt ; cat foo.txt | sed 's/o/u/g') | wc
+Flow Command: ./flow complicated.flow shenanigan
+Explanation:
+The pipe shenanigan takes the output from foo_then_fuu and pipes it into wc.
+It counts the lines, words, and characters in the concatenated output of the cat and sed commands.
+
+Test Case 4
+Command: Sequence of operations on numbers (seq 1 10).
+Flow Command: ./flow comprehensive.flow number_operations
+Explanation:
+The Concatenate number_operations runs a sequence of commands: generating numbers (seq 1 10), sorting them, summing them, and calculating their product.
+The expected output includes the sorted numbers, the sum (Sum: 55), and the product (Product: 3628800).
+
+Test Case 5
+Command: Sequence of operations on words (echo "apple banana ...") followed by counting and transforming the words to uppercase.
+Flow Command: ./flow comprehensive.flow word_operations
+Explanation:
+The Concatenate word_operations performs a series of commands: echoing a list of words, counting them, and transforming them to uppercase.
+The expected output includes the original words, the count of each word, and their uppercase versions.
+
+Test Case 6
+Command: seq 1 10 | sort -nr
+Flow Command: ./flow comprehensive.flow numbers_to_reverse_sort
+Explanation:
+The pipe numbers_to_reverse_sort connects the generate_numbers node (which runs seq 1 10) to the reverse_sort_numbers node (which runs sort -nr to reverse sort).
+Expected output is the numbers in reverse order.
+
+Test Case 7
+Command: mkdir test_directory | wc
+Flow Command: ./flow error_handling.flow catch_errors
+Explanation:
+This test demonstrates error handling by capturing and counting output related to directory creation.
+Expected output shows the result of wc after the mkdir command.
+
+
+
+Files Included:
+->complicated.flow
+->comprehensive.flow
+->error_handling.flow
+->filecount.flow
+
+->foo.txt (used in complicated.flow)
+->test.txt

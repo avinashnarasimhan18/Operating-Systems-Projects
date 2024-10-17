@@ -1,0 +1,60 @@
+node=generate_numbers
+command=seq 1 10
+
+node=generate_words
+command=echo "apple banana cherry date elderberry fig grape"
+
+node=sort_numbers
+command=sort -n
+
+node=reverse_sort_numbers
+command=sort -nr
+
+node=count_words
+command=tr ' ' '\n' | sort | uniq -c | sort -nr
+
+node=sum_numbers
+command=awk '{sum+=$1} END {print "Sum:", sum}'
+
+node=multiply_numbers
+command=awk '{prod=(prod==0)?$1:prod*$1} END {print "Product:", prod}'
+
+node=uppercase_words
+command=tr '[:lower:]' '[:upper:]'
+
+pipe=numbers_to_sort
+from=generate_numbers
+to=sort_numbers
+
+pipe=numbers_to_reverse_sort
+from=generate_numbers
+to=reverse_sort_numbers
+
+pipe=words_to_count
+from=generate_words
+to=count_words
+
+pipe=words_to_uppercase
+from=generate_words
+to=uppercase_words
+
+pipe=numbers_to_sum
+from=generate_numbers
+to=sum_numbers
+
+pipe=numbers_to_multiply
+from=generate_numbers
+to=multiply_numbers
+
+concatenate=number_operations
+parts=4
+part_0=generate_numbers
+part_1=numbers_to_sort
+part_2=numbers_to_sum
+part_3=numbers_to_multiply
+
+concatenate=word_operations
+parts=3
+part_0=generate_words
+part_1=words_to_count
+part_2=words_to_uppercase

@@ -5,20 +5,10 @@ ls | wc
 FLOW COMMAND:
 ./flow filecount.flow doit
 EXPECTED OUTPUT:
-<number of files, words, and characters in the current directory>
+      11      11     146
 TEST-END
 
 TEST-2
-TEST-BEGIN
-COMMAND:
-echo "Hello, World!" | tr '[:lower:]' '[:upper:]'
-FLOW COMMAND:
-./flow uppercase.flow convert
-EXPECTED OUTPUT:
-HELLO, WORLD!
-TEST-END
-
-TEST-3
 TEST-BEGIN
 COMMAND:
 cat foo.txt ; cat foo.txt | sed 's/o/u/g'
@@ -28,7 +18,7 @@ EXPECTED OUTPUT:
 f o of u u
 TEST-END
 
-TEST-4
+TEST-3
 TEST-BEGIN
 COMMAND:
 (cat foo.txt ; cat foo.txt | sed 's/o/u/g') | wc
@@ -38,13 +28,76 @@ EXPECTED OUTPUT:
       0       5      10
 TEST-END
 
+
+TEST-4
+TEST-BEGIN
+COMMAND: seq 1 10 ; seq 1 10 | sort -n ; seq 1 10 | awk '{sum+=$1} END {print "Sum:", sum}' ; seq 1 10 | awk '{prod=(prod==0)?$1:prod*$1} END {print "Product:", prod}'
+FLOW COMMAND: ./flow comprehensive.flow number_operations
+EXPECTED OUTPUT:
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+Sum: 55
+Product: 3628800
+TEST-END
+
+
 TEST-5
 TEST-BEGIN
-COMMAND:
-echo "Line 1" > test.txt && echo "Line 2" >> test.txt && cat test.txt | sort -r | uniq -c
-FLOW COMMAND:
-./flow multicommand.flow process
+COMMAND: echo "apple banana cherry date elderberry fig grape" ; echo "apple banana cherry date elderberry fig grape" | tr ' ' '\n' | sort | uniq -c | sort -nr ; echo "apple banana cherry date elderberry fig grape" | tr '[:lower:]' '[:upper:]'
+FLOW COMMAND: ./flow comprehensive.flow word_operations
 EXPECTED OUTPUT:
-      1 Line 2
-      1 Line 1
+apple banana cherry date elderberry fig grape
+1 grape
+1 fig
+1 elderberry
+1 date
+1 cherry
+1 banana
+1 apple
+APPLE BANANA CHERRY DATE ELDERBERRY FIG GRAPE
+TEST-END
+
+TEST-6
+TEST-BEGIN
+COMMAND: seq 1 10 | sort -nr
+FLOW COMMAND: ./flow comprehensive.flow numbers_to_reverse_sort
+EXPECTED OUTPUT:
+10
+9
+8
+7
+6
+5
+4
+3
+2
+1
+TEST-END
+
+TEST-7
+TEST-BEGIN
+COMMAND:
+mkdir test_directory | wc
+FLOW COMMAND:
+./flow error_handling.flow catch_errors
+EXPECTED OUTPUT:
+       1       4      35
 TEST-END

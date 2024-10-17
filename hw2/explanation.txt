@@ -167,3 +167,14 @@ Flow Command: ./flow error_handling.flow catch_errors
 Explanation:
 This test demonstrates error handling by capturing and counting output related to directory creation.
 Expected output shows the result of wc after the mkdir command.
+
+
+
+Files Included:
+->complicated.flow
+->comprehensive.flow
+->error_handling.flow
+->filecount.flow
+
+->foo.txt (used in complicated.flow)
+->test.txt

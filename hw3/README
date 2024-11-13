@@ -1,0 +1,25 @@
+Once you have imported the provided xv6-public folder into your working directory, 
+Enter the xv6 kernel and you can test the following.
+
+1. Nice System Call
+
+To test the nice system call, simply execute
+nice <pid> <nice_value> 
+
+OR 
+
+nice <nice_value>
+
+This will show the results as seen in the explanation document.
+
+2. Priority Scheduler
+
+We have provided 3 test cases which can be run as individual programs.
+
+Simply exexute,
+
+test1
+test2
+test3
+
+to test the three test cases provided.

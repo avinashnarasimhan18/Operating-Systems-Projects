@@ -17,7 +17,7 @@ typedef struct _bucket_entry {
 } bucket_entry;
 
 bucket_entry *table[NUM_BUCKETS];
-pthread_mutex_t global_mutex; // Single global mutex for the entire hash table
+pthread_spinlock_t global_spinlock; // Single global spinlock for the entire hash table
 
 void panic(char *msg) {
     printf("%s\n", msg);
@@ -30,9 +30,9 @@ double now() {
     return tv.tv_sec + tv.tv_usec / 1000000.0;
 }
 
-// Thread-safe insert function (serialized using global mutex)
+// Thread-safe insert function (serialized using global spinlock)
 void insert(int key, int val) {
-    pthread_mutex_lock(&global_mutex); // Lock the entire table
+    pthread_spin_lock(&global_spinlock); // Lock the entire table
     int i = key % NUM_BUCKETS;
     bucket_entry *e = (bucket_entry *) malloc(sizeof(bucket_entry));
     if (!e) panic("No memory to allocate bucket!");
@@ -40,21 +40,21 @@ void insert(int key, int val) {
     e->key = key;
     e->val = val;
     table[i] = e;
-    pthread_mutex_unlock(&global_mutex); // Unlock the entire table
+    pthread_spin_unlock(&global_spinlock); // Unlock the entire table
 }
 
-// Thread-safe retrieve function (serialized using global mutex)
+// Thread-safe retrieve function (serialized using global spinlock)
 bucket_entry *retrieve(int key) {
-    pthread_mutex_lock(&global_mutex); // Lock the entire table
+    pthread_spin_lock(&global_spinlock); // Lock the entire table
     int i = key % NUM_BUCKETS;
     bucket_entry *b;
     for (b = table[i]; b != NULL; b = b->next) {
         if (b->key == key) {
-            pthread_mutex_unlock(&global_mutex); // Unlock before returning
+            pthread_spin_unlock(&global_spinlock); // Unlock before returning
             return b;
         }
     }
-    pthread_mutex_unlock(&global_mutex); // Unlock if not found
+    pthread_spin_unlock(&global_spinlock); // Unlock if not found
     return NULL;
 }
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     double start, end;
 
     if (argc != 2) {
-        panic("usage: ./parallel_mutex_serial <num_threads>");
+        panic("usage: ./parallel_spin <num_threads>");
     }
     if ((num_threads = atoi(argv[1])) <= 0) {
         panic("must enter a valid number of threads to run");
@@ -103,10 +103,10 @@ int main(int argc, char **argv) {
         panic("out of memory allocating thread handles");
     }
 
-    // Initialize the global mutex
-    pthread_mutex_init(&global_mutex, NULL);
+    // Initialize the global spinlock
+    pthread_spin_init(&global_spinlock, PTHREAD_PROCESS_PRIVATE);
 
-    // Insert keys in parallel
+    // Insert keys in parallel (though serialization removes parallelism)
     start = now();
     for (i = 0; i < num_threads; i++) {
         pthread_create(&threads[i], NULL, put_phase, (void *)i);
@@ -138,8 +138,8 @@ int main(int argc, char **argv) {
 
     printf("[main] Retrieved %ld/%d keys in %f seconds\n", NUM_KEYS - total_lost, NUM_KEYS, end - start);
 
-    // Destroy the global mutex
-    pthread_mutex_destroy(&global_mutex);
+    // Destroy the global spinlock
+    pthread_spin_destroy(&global_spinlock);
 
     free(threads);
     free(lost_keys);

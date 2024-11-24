@@ -17,7 +17,7 @@ typedef struct _bucket_entry {
 } bucket_entry;
 
 bucket_entry *table[NUM_BUCKETS];
-pthread_mutex_t global_mutex; // Single global mutex for the entire hash table
+pthread_mutex_t bucket_mutexes[NUM_BUCKETS]; // Per-bucket mutexes
 
 void panic(char *msg) {
     printf("%s\n", msg);
@@ -30,36 +30,35 @@ double now() {
     return tv.tv_sec + tv.tv_usec / 1000000.0;
 }
 
-// Thread-safe insert function (serialized using global mutex)
+// Thread-safe insert function (locks only the relevant bucket)
 void insert(int key, int val) {
-    pthread_mutex_lock(&global_mutex); // Lock the entire table
-    int i = key % NUM_BUCKETS;
-    bucket_entry *e = (bucket_entry *) malloc(sizeof(bucket_entry));
+    int i = key % NUM_BUCKETS; // Determine the bucket
+    pthread_mutex_lock(&bucket_mutexes[i]); // Lock only this bucket
+
+    bucket_entry *e = (bucket_entry *)malloc(sizeof(bucket_entry));
     if (!e) panic("No memory to allocate bucket!");
     e->next = table[i];
     e->key = key;
     e->val = val;
     table[i] = e;
-    pthread_mutex_unlock(&global_mutex); // Unlock the entire table
+
+    pthread_mutex_unlock(&bucket_mutexes[i]); // Unlock the bucket
 }
 
-// Thread-safe retrieve function (serialized using global mutex)
+// Retrieve function (no lock required for read-only operations)
 bucket_entry *retrieve(int key) {
-    pthread_mutex_lock(&global_mutex); // Lock the entire table
     int i = key % NUM_BUCKETS;
     bucket_entry *b;
     for (b = table[i]; b != NULL; b = b->next) {
         if (b->key == key) {
-            pthread_mutex_unlock(&global_mutex); // Unlock before returning
-            return b;
+            return b; // No locking is needed for retrieval
         }
     }
-    pthread_mutex_unlock(&global_mutex); // Unlock if not found
     return NULL;
 }
 
 void *put_phase(void *arg) {
-    long tid = (long) arg;
+    long tid = (long)arg;
     int key = 0;
 
     for (key = tid; key < NUM_KEYS; key += num_threads) {
@@ -70,16 +69,17 @@ void *put_phase(void *arg) {
 }
 
 void *get_phase(void *arg) {
-    long tid = (long) arg;
+    long tid = (long)arg;
     int key = 0;
     long lost = 0;
 
     for (key = tid; key < NUM_KEYS; key += num_threads) {
-        if (retrieve(keys[key]) == NULL) lost++;
+        if (retrieve(keys[key]) == NULL)
+            lost++;
     }
     printf("[thread %ld] %ld keys lost!\n", tid, lost);
 
-    pthread_exit((void *) lost);
+    pthread_exit((void *)lost);
 }
 
 int main(int argc, char **argv) {
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     double start, end;
 
     if (argc != 2) {
-        panic("usage: ./parallel_mutex_serial <num_threads>");
+        panic("usage: ./parallel_mutex_insert_opt <num_threads>");
     }
     if ((num_threads = atoi(argv[1])) <= 0) {
         panic("must enter a valid number of threads to run");
@@ -98,13 +98,15 @@ int main(int argc, char **argv) {
     for (i = 0; i < NUM_KEYS; i++)
         keys[i] = random();
 
-    threads = (pthread_t *) malloc(sizeof(pthread_t) * num_threads);
+    threads = (pthread_t *)malloc(sizeof(pthread_t) * num_threads);
     if (!threads) {
         panic("out of memory allocating thread handles");
     }
 
-    // Initialize the global mutex
-    pthread_mutex_init(&global_mutex, NULL);
+    // Initialize per-bucket mutexes
+    for (i = 0; i < NUM_BUCKETS; i++) {
+        pthread_mutex_init(&bucket_mutexes[i], NULL);
+    }
 
     // Insert keys in parallel
     start = now();
@@ -122,14 +124,14 @@ int main(int argc, char **argv) {
     // Reset the thread array
     memset(threads, 0, sizeof(pthread_t) * num_threads);
 
-    // Retrieve keys in parallel (though serialization removes parallelism)
+    // Retrieve keys in parallel
     start = now();
     for (i = 0; i < num_threads; i++) {
         pthread_create(&threads[i], NULL, get_phase, (void *)i);
     }
 
     long total_lost = 0;
-    long *lost_keys = (long *) malloc(sizeof(long) * num_threads);
+    long *lost_keys = (long *)malloc(sizeof(long) * num_threads);
     for (i = 0; i < num_threads; i++) {
         pthread_join(threads[i], (void **)&lost_keys[i]);
         total_lost += lost_keys[i];
@@ -138,8 +140,10 @@ int main(int argc, char **argv) {
 
     printf("[main] Retrieved %ld/%d keys in %f seconds\n", NUM_KEYS - total_lost, NUM_KEYS, end - start);
 
-    // Destroy the global mutex
-    pthread_mutex_destroy(&global_mutex);
+    // Destroy per-bucket mutexes
+    for (i = 0; i < NUM_BUCKETS; i++) {
+        pthread_mutex_destroy(&bucket_mutexes[i]);
+    }
 
     free(threads);
     free(lost_keys);

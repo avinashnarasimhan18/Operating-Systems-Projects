@@ -9,7 +9,7 @@ This repository contains assignments and the final project for the Operating Sys
 - **Topics Covered**: Text processing, file handling in xv6.
 
 ### HW2: Pipes and Redirections in xv6
-- **Description**: Extend xv6 shell functionality to handle pipes (`|`) and redirections (`<`, `>`).
+- **Description**: Extend xv6 shell functionality to handle pipes and redirections.
 - **Topics Covered**: Interprocess communication, file I/O.
 
 ### HW3: Round Robin Priority Scheduler in xv6

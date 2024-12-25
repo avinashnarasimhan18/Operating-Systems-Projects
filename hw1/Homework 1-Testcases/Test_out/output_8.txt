@@ -1,0 +1,6 @@
+int side(){
+side(newKamen->5);
+file = side
+file2 = side();
+return
+}

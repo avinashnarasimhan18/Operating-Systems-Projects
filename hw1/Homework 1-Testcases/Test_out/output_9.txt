@@ -1,0 +1,7 @@
+debug not defined
+int main(){
+printf(Sam->5);
+file = main
+file2 = scanf();
+return
+}

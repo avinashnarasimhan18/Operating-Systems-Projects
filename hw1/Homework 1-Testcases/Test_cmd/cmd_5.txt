@@ -1,0 +1,1 @@
+preprocess test_5.txt -DKamen=Sam -DSam=Sam2 -DSam2=Sam3

@@ -1,0 +1,1 @@
+preprocess test_3.txt -DKamen=Sam -DSam=20 -DSam20=45

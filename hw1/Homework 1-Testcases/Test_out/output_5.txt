@@ -1,0 +1,8 @@
+int main(){
+x = Sam3;
+readme = old;
+printf(1,"this is a normal test cases");
+file = open("readme")
+file2 = open("old")
+return
+}

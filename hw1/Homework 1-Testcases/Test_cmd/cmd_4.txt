@@ -1,0 +1,1 @@
+preprocess test_4.txt -DKamen=Sam -DKamen=newSam -Dold=new

@@ -1,0 +1,1 @@
+preprocess test_2.txt -DKamen=Sam -DSam=Sam2 -DSam2=Kamen -DKamen=new

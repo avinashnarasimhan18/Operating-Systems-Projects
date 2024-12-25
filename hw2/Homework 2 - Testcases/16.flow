@@ -1,0 +1,9 @@
+node=write
+command=echo foo
+
+file=output_file
+name=output.txt
+
+pipe=doit
+from=write
+to=output_file

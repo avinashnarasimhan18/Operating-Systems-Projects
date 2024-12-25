@@ -1,0 +1,11 @@
+#ifdef DEBUG
+debug defined
+#else
+debug not defined
+#endif
+int main(){
+printf(Kamen->5);
+file = main
+file2 = scanf();
+return
+}
